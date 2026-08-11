@@ -1,14 +1,14 @@
 {
-  "name": "site-creator-vinext-starter",
+  "name": "nexa-ap-command-center",
   "version": "0.1.0",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "vinext dev",
-    "build": "vinext build",
-    "start": "vinext start",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "test:unit": "vitest run tests/unit",
     "generate:invoices": "node scripts/generate-mock-invoices.mjs",
     "test": "npm run build && node --test tests/rendered-html.test.mjs",
@@ -18,6 +18,7 @@
   "dependencies": {
     "drizzle-orm": "0.45.2",
     "lucide-react": "^1.31.0",
+    "next": "^16.2.6",
     "react": "19.2.6",
     "react-dom": "19.2.6"
   },
