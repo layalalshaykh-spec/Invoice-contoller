@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import type { AppData, Invoice, InvoiceStatus, Role, RulesConfig } from "@/lib/domain/types";
 import { Activity, AlertTriangle, Bell, Bot, Check, ChevronLeft, CircleDollarSign, Clock3, FileCheck2, FileSearch, Files, Gauge, Inbox, LayoutDashboard, Menu, MoreHorizontal, Plus, RotateCcw, Search, Settings2, ShieldCheck, SlidersHorizontal, Sparkles, Upload, UserRoundCheck, X } from "lucide-react";
 
-type View = "dashboard" | "invoices" | "exceptions" | "rules" | "invoice";
+type View = "dashboard" | "operations" | "invoices" | "exceptions" | "rules" | "invoice";
 const money = (value:number) => new Intl.NumberFormat("en-QA", { style:"currency", currency:"QAR", maximumFractionDigits:0 }).format(value);
 const date = (value:string) => new Intl.DateTimeFormat("en-GB", { day:"2-digit", month:"short", year:"numeric" }).format(new Date(value));
 const statusLabel = (status:string) => status.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
@@ -58,6 +58,7 @@ export function CommandCenter({ initialData }: { initialData: AppData }) {
       <div className="org-label">Workspace</div>
       <nav className="nav" aria-label="Primary navigation">
         <Nav active={view==="dashboard"} icon={<LayoutDashboard size={16}/>} label="Command center" onClick={()=>navigate("dashboard")}/>
+        <Nav active={view==="operations"} icon={<Activity size={16}/>} label="Processing control" onClick={()=>navigate("operations")}/>
         <Nav active={view==="invoices"||view==="invoice"} icon={<Inbox size={16}/>} label="Invoice inbox" onClick={()=>navigate("invoices")}/>
         <Nav active={view==="exceptions"} icon={<AlertTriangle size={16}/>} label="Exceptions" count={metrics.open} onClick={()=>navigate("exceptions")}/>
         <Nav active={view==="rules"} icon={<Settings2 size={16}/>} label="Rules & controls" onClick={()=>navigate("rules")}/>
@@ -68,6 +69,7 @@ export function CommandCenter({ initialData }: { initialData: AppData }) {
       <header className="topbar"><div className="crumb"><button className="icon-btn mobile-menu" aria-label="Open navigation" onClick={()=>setMobileOpen(v=>!v)}><Menu size={16}/></button><span>Al Rayyan Trading</span><span>/</span><strong>{view==="invoice"?selected.invoiceNumber:statusLabel(view)}</strong></div><div className="top-actions"><select className="select role-select" aria-label="Demo persona" value={role} onChange={e=>setRole(e.target.value as Role)}><option value="AP_CLERK">AP Clerk</option><option value="AP_MANAGER">AP Manager</option><option value="AUDITOR">Auditor</option></select><button className="icon-btn" aria-label="Notifications"><Bell size={15}/></button></div></header>
       <div className="content">
         {view==="dashboard"&&<Dashboard data={data} metrics={metrics} onInvoices={()=>navigate("invoices")} onExceptions={()=>navigate("exceptions")} onOpen={openInvoice}/>} 
+        {view==="operations"&&<Operations/>}
         {view==="invoices"&&<Invoices data={data} search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} onOpen={openInvoice} onUpload={()=>setUploadOpen(true)}/>} 
         {view==="exceptions"&&<Exceptions data={data} onOpen={openInvoice}/>} 
         {view==="rules"&&<Rules rules={data.rules} role={role} updateRule={updateRule} onSave={()=>notify("Rules version 4 saved. New invoices will use these tolerances.")}/>} 
@@ -93,6 +95,17 @@ function Dashboard({data,metrics,onInvoices,onExceptions,onOpen}:{data:AppData;m
 }
 
 function Kpi({icon,label,value,foot,note}:{icon:React.ReactNode;label:string;value:string;foot:string;note:string}) { return <div className="card kpi"><div className="kpi-top"><span>{label}</span><span className="kpi-icon">{icon}</span></div><div className="kpi-value">{value}</div><div className="kpi-foot"><span className="trend">{foot}</span><span>{note}</span></div></div> }
+
+function Operations() {
+  const lanes=[{name:"Email intake",value:3210,state:"Healthy"},{name:"Portal uploads",value:4784,state:"Healthy"},{name:"SFTP batches",value:1848,state:"Healthy"}];
+  const runs=[{id:"RUN-0811-04",source:"Supplier portal",received:2500,completed:2318,exceptions:118,status:"Processing",started:"14:05"},{id:"RUN-0811-03",source:"Email inbox",received:3000,completed:3000,exceptions:164,status:"Complete",started:"10:30"},{id:"RUN-0811-02",source:"ERP document drop",received:2200,completed:2200,exceptions:97,status:"Complete",started:"07:15"},{id:"RUN-0811-01",source:"Overnight SFTP",received:2142,completed:2142,exceptions:112,status:"Complete",started:"01:00"}];
+  return <><div className="page-head"><div><div className="eyebrow">High-volume operations · 11 August</div><h1>Processing control</h1><p className="subtitle">Manage the flow, not ten thousand individual rows.</p></div><span className="capacity-chip"><span/>Within capacity · 41%</span></div>
+    <section className="volume-hero"><div><span>Received today</span><strong>9,842</strong><small>across 4 controlled runs</small></div><div><span>Decisions completed</span><strong>9,660</strong><small>98.2% cleared automatically or routed</small></div><div><span>In progress</span><strong>182</strong><small>estimated clearance in 7 minutes</small></div><div><span>Design capacity</span><strong>24k</strong><small>invoices per business day</small></div></section>
+    <section className="ops-grid"><div className="card queue-card"><div className="panel-head"><h2>Live processing lanes</h2><span>Updated just now</span></div><div className="lane-list">{lanes.map((lane,i)=><div className="lane" key={lane.name}><div className="lane-name"><span className="lane-pulse"/><div><strong>{lane.name}</strong><small>{lane.value.toLocaleString()} documents today</small></div></div><div className="lane-track"><i style={{width:`${[72,88,54][i]}%`}}/></div><span className="lane-rate">{[41,67,29][i]}/min</span><span className="lane-state">{lane.state}</span></div>)}</div></div>
+      <div className="card pressure-card"><div className="panel-head"><h2>Queue pressure</h2><span>Auto-balancing</span></div><div className="pressure-body"><div className="pressure-ring"><strong>41%</strong><span>capacity</span></div><div className="pressure-notes"><p><span className="success-dot"/>Extraction <strong>68 waiting</strong></p><p><span className="success-dot"/>Matching <strong>92 waiting</strong></p><p><span className="warn-dot"/>Investigation <strong>22 waiting</strong></p></div></div><div className="ops-note"><ShieldCheck size={14}/><span>Every document uses an idempotency key. Retries cannot create duplicate invoices.</span></div></div>
+      <div className="card run-table"><div className="panel-head"><h2>Today’s processing runs</h2><button>Export operations log</button></div><div className="table-scroll"><table><thead><tr><th>Run</th><th>Source</th><th>Started</th><th>Progress</th><th>Exceptions</th><th>Status</th></tr></thead><tbody>{runs.map(run=><tr key={run.id}><td className="primary-cell">{run.id}</td><td>{run.source}</td><td>{run.started}</td><td><div className="run-progress"><span><i style={{width:`${run.completed/run.received*100}%`}}/></span><small>{run.completed.toLocaleString()} / {run.received.toLocaleString()}</small></div></td><td>{run.exceptions}</td><td><span className={`badge ${run.status==="Complete"?"success":"warning"}`}>{run.status}</span></td></tr>)}</tbody></table></div></div>
+    </section><div className="scale-guidance"><Bot size={16}/><div><strong>How people work at this volume</strong><p>Clerks work saved exception views and assigned batches; managers monitor SLA and queue pressure. Individual invoices remain available for investigation, but nobody scrolls through 10,000 rows.</p></div></div></>;
+}
 
 function Invoices({data,search,setSearch,filter,setFilter,onOpen,onUpload}:{data:AppData;search:string;setSearch:(s:string)=>void;filter:string;setFilter:(s:string)=>void;onOpen:(id:string)=>void;onUpload:()=>void}) {
   const list=data.invoices.filter(i=>(filter==="ALL"||i.status===filter)&&(`${i.invoiceNumber} ${i.supplierName} ${i.poNumber}`.toLowerCase().includes(search.toLowerCase())));
