@@ -10,6 +10,7 @@
     "build": "vinext build",
     "start": "vinext start",
     "test:unit": "vitest run tests/unit",
+    "generate:invoices": "node scripts/generate-mock-invoices.mjs",
     "test": "npm run build && node --test tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
@@ -22,8 +23,10 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
+    "@cloudflare/workers-types": "^4.20260702.1",
     "@eslint/js": "9.39.4",
     "@next/eslint-plugin-next": "16.2.6",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",

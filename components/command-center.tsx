@@ -19,6 +19,9 @@ export function CommandCenter({ initialData }: { initialData: AppData }) {
   const [filter, setFilter] = useState("ALL");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploadStage, setUploadStage] = useState(-1);
+  const [uploadName, setUploadName] = useState("");
 
   const metrics = useMemo(() => {
     const processed = data.invoices.filter(i => !["RECEIVED","EXTRACTING","VALIDATING","MATCHING"].includes(i.status));
@@ -40,6 +43,14 @@ export function CommandCenter({ initialData }: { initialData: AppData }) {
     notify(`Invoice ${label.toLowerCase()} and audit record created.`);
   }
   function updateRule(key:keyof RulesConfig,value:number|boolean) { setData(d=>({...d,rules:{...d.rules,[key]:value}})); }
+  async function ingest(file:File) {
+    setUploadName(file.name); setUploadStage(0);
+    for (let stage=1; stage<5; stage++) { await new Promise(resolve=>window.setTimeout(resolve,520)); setUploadStage(stage); }
+    const source=data.invoices.find(i=>i.status==="AUTO_APPROVED") ?? data.invoices[0]; const now=new Date().toISOString(); const id=`inv_upload_${Date.now()}`;
+    const added:Invoice={...source,id,invoiceNumber:file.name.replace(/\.[^.]+$/,"").toUpperCase().replace(/[^A-Z0-9]+/g,"-").slice(0,18),sourceFileUrl:URL.createObjectURL(file),status:"AUTO_APPROVED",createdAt:now,updatedAt:now,rawExtraction:{...source.rawExtraction,extractedAt:now}};
+    setData(current=>({...current,invoices:[added,...current.invoices],auditLogs:[...current.auditLogs,{id:`audit_${Date.now()}`,invoiceId:id,action:"RULES_PASSED",previousStatus:"MATCHING",newStatus:"AUTO_APPROVED",detail:{deterministic:true,source:"UPLOAD"},createdAt:now}]}));
+    await new Promise(resolve=>window.setTimeout(resolve,450)); setUploadOpen(false); setUploadStage(-1); setSelectedId(id); setView("invoice"); notify("Invoice processed and auto-approved in 3.1 seconds.");
+  }
 
   return <div className="app-grid">
     <aside className={`sidebar ${mobileOpen?"open":""}`}>
@@ -57,13 +68,14 @@ export function CommandCenter({ initialData }: { initialData: AppData }) {
       <header className="topbar"><div className="crumb"><button className="icon-btn mobile-menu" aria-label="Open navigation" onClick={()=>setMobileOpen(v=>!v)}><Menu size={16}/></button><span>Al Rayyan Trading</span><span>/</span><strong>{view==="invoice"?selected.invoiceNumber:statusLabel(view)}</strong></div><div className="top-actions"><select className="select role-select" aria-label="Demo persona" value={role} onChange={e=>setRole(e.target.value as Role)}><option value="AP_CLERK">AP Clerk</option><option value="AP_MANAGER">AP Manager</option><option value="AUDITOR">Auditor</option></select><button className="icon-btn" aria-label="Notifications"><Bell size={15}/></button></div></header>
       <div className="content">
         {view==="dashboard"&&<Dashboard data={data} metrics={metrics} onInvoices={()=>navigate("invoices")} onOpen={openInvoice}/>} 
-        {view==="invoices"&&<Invoices data={data} search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} onOpen={openInvoice} onUpload={()=>notify("Demo invoice received. Extraction pipeline started.")}/>} 
+        {view==="invoices"&&<Invoices data={data} search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} onOpen={openInvoice} onUpload={()=>setUploadOpen(true)}/>} 
         {view==="exceptions"&&<Exceptions data={data} onOpen={openInvoice}/>} 
         {view==="rules"&&<Rules rules={data.rules} role={role} updateRule={updateRule} onSave={()=>notify("Rules version 4 saved. New invoices will use these tolerances.")}/>} 
         {view==="invoice"&&<InvoiceDetail invoice={selected} data={data} exception={exception} canDecide={canDecide} onBack={()=>navigate("invoices")} decide={decide}/>} 
       </div>
     </main>
     {toast&&<div className="toast" role="status">{toast}</div>}
+    {uploadOpen&&<UploadDialog stage={uploadStage} fileName={uploadName} onClose={()=>{if(uploadStage<0)setUploadOpen(false)}} onFile={ingest}/>} 
   </div>;
 }
 
@@ -107,3 +119,5 @@ function Field({label,value,confidence}:{label:string;value:string;confidence:nu
 function Rules({rules,role,updateRule,onSave}:{rules:RulesConfig;role:Role;updateRule:(k:keyof RulesConfig,v:number|boolean)=>void;onSave:()=>void}) { const disabled=role==="AUDITOR"||role==="AP_CLERK"; return <><div className="page-head"><div><div className="eyebrow">Governance · Version 3 active</div><h1>Rules & controls</h1><p className="subtitle">Deterministic thresholds applied before any AI recommendation.</p></div><button className="btn btn-primary" disabled={disabled} onClick={onSave}><FileCheck2 size={14}/>Save as version 4</button></div><div className="card"><div className="panel-head"><h2>Three-way matching tolerances</h2><span>Changes apply to new processing runs</span></div><Rule title="Unit price variance" text="Maximum invoice price difference from the approved PO line." value={rules.priceTolerancePercent} suffix="%" disabled={disabled} set={v=>updateRule("priceTolerancePercent",v)}/><Rule title="Quantity variance" text="Maximum invoiced quantity difference from goods received." value={rules.quantityTolerancePercent} suffix="%" disabled={disabled} set={v=>updateRule("quantityTolerancePercent",v)}/><Rule title="Invoice total variance" text="Maximum total difference before routing to manager review." value={rules.totalTolerancePercent} suffix="%" disabled={disabled} set={v=>updateRule("totalTolerancePercent",v)}/><Rule title="Auto-approval ceiling" text="Invoices above this value always require a human approval." value={rules.autoApprovalLimit} suffix="QAR" disabled={disabled} set={v=>updateRule("autoApprovalLimit",v)}/><Rule title="Duplicate lookback" text="Date window used for fuzzy duplicate detection." value={rules.duplicateDateWindowDays} suffix="days" disabled={disabled} set={v=>updateRule("duplicateDateWindowDays",v)}/><div className="rule-row"><div><h3>Require goods receipt</h3><p>Block auto-processing when no GRN exists for a referenced purchase order.</p></div><button className="toggle" disabled={disabled} aria-label="Require goods receipt" onClick={()=>updateRule("requireGrn",!rules.requireGrn)}/></div></div><div className="card" style={{marginTop:16,padding:17,display:"flex",gap:12,alignItems:"center"}}><Bot size={18} color="#176b51"/><div><strong style={{fontSize:11.5}}>Governance boundary</strong><p style={{fontSize:10,color:"#66736e",margin:"3px 0 0"}}>AI explains exceptions but cannot change these rules or apply a financial decision.</p></div></div></> }
 function Rule({title,text,value,suffix,disabled,set}:{title:string;text:string;value:number;suffix:string;disabled:boolean;set:(n:number)=>void}) { return <div className="rule-row"><div><h3>{title}</h3><p>{text}</p></div><div className="rule-control"><input className="input" disabled={disabled} type="number" value={value} onChange={e=>set(Number(e.target.value))}/><span style={{fontSize:10,color:"#66736e"}}>{suffix}</span></div></div> }
 function Empty() { return <div className="empty"><span className="empty-icon"><Inbox size={18}/></span><h3>No invoices found</h3><p>Try adjusting your search or status filter.</p></div> }
+
+function UploadDialog({stage,fileName,onClose,onFile}:{stage:number;fileName:string;onClose:()=>void;onFile:(file:File)=>void}) { const stages=["Received","Extracting fields","Validating supplier","Matching PO & GRN","Decision ready"]; return <div className="modal-backdrop" role="presentation"><div className="modal" role="dialog" aria-modal="true" aria-labelledby="upload-title"><div className="modal-head"><div><div className="eyebrow">New intake</div><h2 id="upload-title">Process an invoice</h2></div><button className="icon-btn" aria-label="Close upload" onClick={onClose} disabled={stage>=0}><X size={15}/></button></div>{stage<0?<label className="dropzone"><Upload size={25}/><strong>Drop an invoice here or browse</strong><span>PDF, PNG or JPG · up to 10 MB · Arabic and English</span><input type="file" accept="application/pdf,image/png,image/jpeg" onChange={e=>{const file=e.target.files?.[0];if(file)onFile(file)}}/></label>:<div className="processing"><div className="file-chip"><FileCheck2 size={18}/><div><strong>{fileName}</strong><span>Secure local intake</span></div></div><div className="processing-list">{stages.map((label,i)=><div className={`processing-step ${i<stage?"done":i===stage?"active":""}`} key={label}><span>{i<stage?<Check size={12}/>:i+1}</span><strong>{label}</strong>{i===stage&&<i/>}</div>)}</div><p>Deterministic controls are applied before any AI recommendation.</p></div>}</div></div> }

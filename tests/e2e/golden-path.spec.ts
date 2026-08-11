@@ -1,0 +1,2 @@
+import { test, expect } from "@playwright/test";
+test("manager reviews and approves an exception", async ({ page }) => { await page.goto("/"); await page.getByRole("button",{name:/Exceptions/}).click(); await page.locator("tbody tr").first().click(); await expect(page.getByText("AI investigation")).toBeVisible(); await page.getByRole("button",{name:/Approve with justification/}).click(); await expect(page.getByRole("status")).toContainText("audit record created"); });

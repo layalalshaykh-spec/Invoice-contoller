@@ -8,6 +8,7 @@ Requires Node.js 22.13 or newer.
 
 ```bash
 npm install
+npm run generate:invoices
 npm run dev
 ```
 
@@ -26,6 +27,8 @@ Open `http://localhost:3000`. Use the persona selector in the header to switch b
 ## What is real and what is mocked
 
 The normalization, duplicate detection, two/three-way matching, ordered business rules, confidence handling, role-based actions, derived dashboard metrics and audit behavior are real application logic backed by a realistic seeded data model. ERP, file storage, notifications, email intake and AI provider calls are represented by explicit adapters and deterministic demo implementations; production providers can replace them without changing the domain logic. No payment is executed by this demo.
+
+The upload workflow accepts PDF, PNG and JPG files and demonstrates the complete received → extracted → validated → matched → decision pipeline. The included generator creates 34 source PDFs so every seeded invoice has a real document asset.
 
 ## Verification
 
