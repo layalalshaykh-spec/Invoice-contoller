@@ -16,3 +16,4 @@ export class MemoryStorageAdapter implements StorageAdapter {
   async get(key: string) { return this.files.get(key) ?? null }
   async remove(key: string) { this.files.delete(key) }
 }
+export const storageAdapter: StorageAdapter = new MemoryStorageAdapter();
