@@ -6,6 +6,7 @@ const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 export interface DataRepository {
   snapshot(): Promise<AppData>;
   addInvoice(invoice: Invoice): Promise<Invoice>;
+  addException(exception: InvoiceException): Promise<InvoiceException>;
   updateInvoice(id: string, patch: Partial<Invoice>): Promise<Invoice>;
   addAudit(log: AuditLog): Promise<void>;
   updateException(id: string, patch: Partial<InvoiceException>): Promise<InvoiceException>;
@@ -18,6 +19,7 @@ export class MemoryDataRepository implements DataRepository {
   private data: AppData = clone(seedData);
   async snapshot() { return clone(this.data) }
   async addInvoice(invoice:Invoice) { if(this.data.invoices.some(row=>row.id===invoice.id))throw new Error(`Invoice ${invoice.id} already exists`); this.data.invoices.unshift(clone(invoice)); return clone(invoice) }
+  async addException(exception:InvoiceException) { if(this.data.exceptions.some(row=>row.id===exception.id))throw new Error(`Exception ${exception.id} already exists`); this.data.exceptions.unshift(clone(exception)); return clone(exception) }
   async updateInvoice(id: string, patch: Partial<Invoice>) { const row=this.data.invoices.find(x=>x.id===id); if(!row) throw new Error(`Invoice ${id} not found`); Object.assign(row,patch,{updatedAt:new Date().toISOString()}); return clone(row) }
   async addAudit(log: AuditLog) { this.data.auditLogs.push(clone(log)) }
   async updateException(id: string, patch: Partial<InvoiceException>) { const row=this.data.exceptions.find(x=>x.id===id); if(!row) throw new Error(`Exception ${id} not found`); Object.assign(row,patch); return clone(row) }
