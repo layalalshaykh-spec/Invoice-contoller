@@ -1,5 +1,5 @@
 export const tokens = {
-  color: { ink: "#13221d", canvas: "#f5f7f5", paper: "#ffffff", accent: "#176b51", success: "#167052", warning: "#b66a16", danger: "#b43a3a" },
-  radius: { control: 9, card: 13 },
-  typography: { body: "Inter, ui-sans-serif, system-ui", numeric: "tabular-nums" },
+  color: { ink: "#202926", canvas: "#f2efe8", paper: "#fbfaf7", accent: "#0e6670", success: "#27705a", warning: "#a7641c", danger: "#a9443c" },
+  radius: { control: 7, card: 9 },
+  typography: { body: "Aptos, Segoe UI, ui-sans-serif", display: "Iowan Old Style, Georgia, serif", numeric: "tabular-nums" },
 } as const;
