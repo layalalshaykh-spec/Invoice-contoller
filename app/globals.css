@@ -401,3 +401,20 @@ tbody tr:hover { background:rgba(255,241,232,.58); }
 .ops-note { color:#746b64; background:rgba(255,240,231,.58); border-color:rgba(226,108,47,.12); }
 .scale-guidance { color:var(--accent); }
 @media (max-width:760px) { .sidebar { margin:0; height:100vh; border-radius:0 22px 22px 0; } }
+.notification-button { position:relative; overflow:visible; }
+.notification-button>span { position:absolute; width:7px; height:7px; right:6px; top:5px; border:2px solid white; border-radius:50%; background:var(--accent); }
+.notification-panel { position:fixed; z-index:70; right:24px; top:66px; width:min(350px,calc(100vw - 28px)); overflow:hidden; border:1px solid rgba(255,255,255,.98); border-radius:18px; background:rgba(255,255,255,.82); box-shadow:0 24px 70px rgba(73,52,38,.18),inset 0 1px 0 white; backdrop-filter:blur(26px) saturate(145%); animation:toast .2s ease; }
+.notice { display:flex; gap:11px; align-items:flex-start; padding:14px 16px; border-top:1px solid rgba(95,77,64,.08); color:#81776f; }
+.notice.unread { color:var(--accent); background:rgba(255,240,231,.52); }
+.notice strong,.notice span { display:block; }
+.notice strong { color:var(--ink); font-size:10.5px; }
+.notice span { margin-top:3px; color:var(--muted); font-size:9px; }
+.detail-actions { display:flex; align-items:center; gap:9px; }
+.comparison-card,.raw-panel { grid-column:1/-1; }
+.comparison-card tbody tr { cursor:default; }
+.raw-panel { overflow:hidden; }
+.raw-panel summary { display:flex; align-items:center; justify-content:space-between; padding:14px 17px; cursor:pointer; list-style:none; }
+.raw-panel summary>span { display:flex; align-items:center; gap:8px; font:600 13px Georgia,serif; }
+.raw-panel summary small { color:var(--muted); font-size:9px; }
+.raw-panel pre { max-height:330px; overflow:auto; margin:0; padding:17px; border-top:1px solid rgba(92,76,64,.09); background:rgba(245,242,238,.74); color:#5d544e; font:10px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace; }
+@media (max-width:560px) { .detail-actions{width:100%;justify-content:space-between}.notification-panel{right:14px;top:62px} }

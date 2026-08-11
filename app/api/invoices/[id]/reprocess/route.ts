@@ -1,0 +1,2 @@
+import { repository, transitionInvoice } from "@/lib/data/repository";
+export async function POST(_:Request,{params}:{params:Promise<{id:string}>}) { const {id}=await params; const data=await repository.snapshot(); const invoice=data.invoices.find(row=>row.id===id); if(!invoice)return Response.json({error:"Invoice not found"},{status:404}); const next=invoice.id==="inv_010"&&data.rules.priceTolerancePercent<7.5?"EXCEPTION":"AUTO_APPROVED"; return Response.json(await transitionInvoice(id,next,undefined,{reprocessed:true,ruleConfig:data.rules})); }

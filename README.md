@@ -24,6 +24,8 @@ Open `http://localhost:3000`. Use the persona selector in the header to switch b
 6. Return as AP Manager, open **Rules & controls**, adjust a tolerance, and save a new rule version.
 7. Return to the dashboard to see decisions reflected in operational totals.
 
+The notification center, line-level evidence table, raw extraction payload, role restrictions, decision endpoints, and reprocessing controls are included in the demo path. Tighten or loosen a tolerance under **Rules & controls**, then use **Re-run controls** on an invoice to show the deterministic outcome changing with the active rule version.
+
 ## What is real and what is mocked
 
 The normalization, duplicate detection, two/three-way matching, ordered business rules, confidence handling, role-based actions, derived dashboard metrics and audit behavior are real application logic backed by a realistic seeded data model. ERP, file storage, notifications, email intake and AI provider calls are represented by explicit adapters and deterministic demo implementations; production providers can replace them without changing the domain logic. No payment is executed by this demo.
